@@ -1,96 +1,117 @@
-<script>
-    // Initialize Supabase Client
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    
-    // Changed 'supabase' to 'supabaseClient' to avoid the naming collision
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Carpool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 p-4 md:p-8 font-sans">
 
-    async function fetchSchedule() {
-        const { data, error } = await supabaseClient
-            .from('schedule')
-            .select('*')
-            .order('id', { ascending: true });
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Internship Carpool</h1>
+        <p class="text-gray-600 mb-6">Holy Cross Hospital, Germantown MD</p>
+        
+        <div id="schedule-container" class="space-y-4">
+            <!-- Shifts will be injected here via JavaScript -->
+            <p class="text-gray-500">Loading schedule...</p>
+        </div>
+    </div>
 
-        if (error) {
-            console.error('Error fetching schedule:', error);
-            return;
-        }
-        renderSchedule(data);
-    }
+    <script>
+        // Initialize Supabase Client
+        const SUPABASE_URL = 'https://sgmpqxehmxnryiylcxtv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnbXBxeGVobXhucnlpeWxjeHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NjkyMTgsImV4cCI6MjEwMDE0NTIxOH0.-gnFYAENE3i1-KDoKj7TPMOSF6D8zioaw-0HELl_DKg';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function claimShift(id) {
-        const name = prompt("Please enter your name to claim this shift:");
-        if (!name) return;
+        async function fetchSchedule() {
+            const { data, error } = await supabase
+                .from('schedule')
+                .select('*')
+                .order('id', { ascending: true });
 
-        const { error } = await supabaseClient
-            .from('schedule')
-            .update({ volunteer: name })
-            .eq('id', id);
-
-        if (error) {
-            alert("Failed to claim shift. Someone else might have grabbed it.");
-            console.error(error);
-        } else {
-            fetchSchedule(); // Refresh the UI
-        }
-    }
-
-    async function releaseShift(id) {
-        const confirmRelease = confirm("Are you sure you want to remove your name?");
-        if (!confirmRelease) return;
-
-        const { error } = await supabaseClient
-            .from('schedule')
-            .update({ volunteer: '' })
-            .eq('id', id);
-
-        if (error) {
-            console.error(error);
-        } else {
-            fetchSchedule();
-        }
-    }
-
-    function renderSchedule(shifts) {
-        const container = document.getElementById('schedule-container');
-        container.innerHTML = ''; // Clear loading text
-
-        shifts.forEach(shift => {
-            const isClaimed = shift.volunteer && shift.volunteer.trim() !== '';
-            
-            const shiftCard = document.createElement('div');
-            shiftCard.className = "border rounded-lg p-4 flex justify-between items-center bg-gray-50";
-            
-            const infoDiv = document.createElement('div');
-            infoDiv.innerHTML = `
-                <p class="font-semibold text-gray-800">${shift.date}</p>
-                <p class="text-gray-600">${shift.time} <span class="font-bold text-indigo-600">(${shift.action})</span></p>
-            `;
-
-            const actionDiv = document.createElement('div');
-            
-            if (isClaimed) {
-                actionDiv.innerHTML = `
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">Claimed by</p>
-                        <p class="font-bold text-green-600 cursor-pointer hover:underline" onclick="releaseShift(${shift.id})">${shift.volunteer}</p>
-                    </div>
-                `;
-            } else {
-                actionDiv.innerHTML = `
-                    <button onclick="claimShift(${shift.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow transition">
-                        Claim
-                    </button>
-                `;
+            if (error) {
+                console.error('Error fetching schedule:', error);
+                return;
             }
+            renderSchedule(data);
+        }
 
-            shiftCard.appendChild(infoDiv);
-            shiftCard.appendChild(actionDiv);
-            container.appendChild(shiftCard);
-        });
-    }
+        async function claimShift(id) {
+            const name = prompt("Please enter your name to claim this shift:");
+            if (!name) return;
 
-    // Load the schedule when the page opens
-    fetchSchedule();
-</script>
+            const { error } = await supabase
+                .from('schedule')
+                .update({ volunteer: name })
+                .eq('id', id);
+
+            if (error) {
+                alert("Failed to claim shift. Someone else might have grabbed it.");
+                console.error(error);
+            } else {
+                fetchSchedule(); // Refresh the UI
+            }
+        }
+
+        async function releaseShift(id) {
+            const confirmRelease = confirm("Are you sure you want to remove your name?");
+            if (!confirmRelease) return;
+
+            const { error } = await supabase
+                .from('schedule')
+                .update({ volunteer: '' })
+                .eq('id', id);
+
+            if (error) {
+                console.error(error);
+            } else {
+                fetchSchedule();
+            }
+        }
+
+        function renderSchedule(shifts) {
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = ''; // Clear loading text
+
+            shifts.forEach(shift => {
+                const isClaimed = shift.volunteer && shift.volunteer.trim() !== '';
+                
+                const shiftCard = document.createElement('div');
+                shiftCard.className = "border rounded-lg p-4 flex justify-between items-center bg-gray-50";
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.innerHTML = `
+                    <p class="font-semibold text-gray-800">${shift.date}</p>
+                    <p class="text-gray-600">${shift.time} <span class="font-bold text-indigo-600">(${shift.action})</span></p>
+                `;
+
+                const actionDiv = document.createElement('div');
+                
+                if (isClaimed) {
+                    actionDiv.innerHTML = `
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Claimed by</p>
+                            <p class="font-bold text-green-600 cursor-pointer hover:underline" onclick="releaseShift(${shift.id})">${shift.volunteer}</p>
+                        </div>
+                    `;
+                } else {
+                    actionDiv.innerHTML = `
+                        <button onclick="claimShift(${shift.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow transition">
+                            Claim
+                        </button>
+                    `;
+                }
+
+                shiftCard.appendChild(infoDiv);
+                shiftCard.appendChild(actionDiv);
+                container.appendChild(shiftCard);
+            });
+        }
+
+        // Load the schedule when the page opens
+        fetchSchedule();
+    </script>
+</body>
+</html>
