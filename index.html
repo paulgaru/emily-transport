@@ -23,95 +23,97 @@
         // Initialize Supabase Client
         const SUPABASE_URL = 'https://sgmpqxehmxnryiylcxtv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnbXBxeGVobXhucnlpeWxjeHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NjkyMTgsImV4cCI6MjEwMDE0NTIxOH0.-gnFYAENE3i1-KDoKj7TPMOSF6D8zioaw-0HELl_DKg';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function fetchSchedule() {
-            const { data, error } = await supabase
-                .from('schedule')
-                .select('*')
-                .order('id', { ascending: true });
+    // Changed 'supabase' to 'supabaseClient' to avoid the naming collision
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            if (error) {
-                console.error('Error fetching schedule:', error);
-                return;
-            }
-            renderSchedule(data);
+    async function fetchSchedule() {
+        const { data, error } = await supabaseClient
+            .from('schedule')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching schedule:', error);
+            return;
         }
+        renderSchedule(data);
+    }
 
-        async function claimShift(id) {
-            const name = prompt("Please enter your name to claim this shift:");
-            if (!name) return;
+    async function claimShift(id) {
+        const name = prompt("Please enter your name to claim this shift:");
+        if (!name) return;
 
-            const { error } = await supabase
-                .from('schedule')
-                .update({ volunteer: name })
-                .eq('id', id);
+        const { error } = await supabaseClient
+            .from('schedule')
+            .update({ volunteer: name })
+            .eq('id', id);
 
-            if (error) {
-                alert("Failed to claim shift. Someone else might have grabbed it.");
-                console.error(error);
-            } else {
-                fetchSchedule(); // Refresh the UI
-            }
+        if (error) {
+            alert("Failed to claim shift. Someone else might have grabbed it.");
+            console.error(error);
+        } else {
+            fetchSchedule(); // Refresh the UI
         }
+    }
 
-        async function releaseShift(id) {
-            const confirmRelease = confirm("Are you sure you want to remove your name?");
-            if (!confirmRelease) return;
+    async function releaseShift(id) {
+        const confirmRelease = confirm("Are you sure you want to remove your name?");
+        if (!confirmRelease) return;
 
-            const { error } = await supabase
-                .from('schedule')
-                .update({ volunteer: '' })
-                .eq('id', id);
+        const { error } = await supabaseClient
+            .from('schedule')
+            .update({ volunteer: '' })
+            .eq('id', id);
 
-            if (error) {
-                console.error(error);
-            } else {
-                fetchSchedule();
-            }
+        if (error) {
+            console.error(error);
+        } else {
+            fetchSchedule();
         }
+    }
 
-        function renderSchedule(shifts) {
-            const container = document.getElementById('schedule-container');
-            container.innerHTML = ''; // Clear loading text
+    function renderSchedule(shifts) {
+        const container = document.getElementById('schedule-container');
+        container.innerHTML = ''; // Clear loading text
 
-            shifts.forEach(shift => {
-                const isClaimed = shift.volunteer && shift.volunteer.trim() !== '';
-                
-                const shiftCard = document.createElement('div');
-                shiftCard.className = "border rounded-lg p-4 flex justify-between items-center bg-gray-50";
-                
-                const infoDiv = document.createElement('div');
-                infoDiv.innerHTML = `
-                    <p class="font-semibold text-gray-800">${shift.date}</p>
-                    <p class="text-gray-600">${shift.time} <span class="font-bold text-indigo-600">(${shift.action})</span></p>
+        shifts.forEach(shift => {
+            const isClaimed = shift.volunteer && shift.volunteer.trim() !== '';
+            
+            const shiftCard = document.createElement('div');
+            shiftCard.className = "border rounded-lg p-4 flex justify-between items-center bg-gray-50";
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.innerHTML = `
+                <p class="font-semibold text-gray-800">${shift.date}</p>
+                <p class="text-gray-600">${shift.time} <span class="font-bold text-indigo-600">(${shift.action})</span></p>
+            `;
+
+            const actionDiv = document.createElement('div');
+            
+            if (isClaimed) {
+                actionDiv.innerHTML = `
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Claimed by</p>
+                        <p class="font-bold text-green-600 cursor-pointer hover:underline" onclick="releaseShift(${shift.id})">${shift.volunteer}</p>
+                    </div>
                 `;
+            } else {
+                actionDiv.innerHTML = `
+                    <button onclick="claimShift(${shift.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow transition">
+                        Claim
+                    </button>
+                `;
+            }
 
-                const actionDiv = document.createElement('div');
-                
-                if (isClaimed) {
-                    actionDiv.innerHTML = `
-                        <div class="text-right">
-                            <p class="text-sm text-gray-500">Claimed by</p>
-                            <p class="font-bold text-green-600 cursor-pointer hover:underline" onclick="releaseShift(${shift.id})">${shift.volunteer}</p>
-                        </div>
-                    `;
-                } else {
-                    actionDiv.innerHTML = `
-                        <button onclick="claimShift(${shift.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full shadow transition">
-                            Claim
-                        </button>
-                    `;
-                }
+            shiftCard.appendChild(infoDiv);
+            shiftCard.appendChild(actionDiv);
+            container.appendChild(shiftCard);
+        });
+    }
 
-                shiftCard.appendChild(infoDiv);
-                shiftCard.appendChild(actionDiv);
-                container.appendChild(shiftCard);
-            });
-        }
-
-        // Load the schedule when the page opens
-        fetchSchedule();
-    </script>
+    // Load the schedule when the page opens
+    fetchSchedule();
+</script>        
 </body>
 </html>
