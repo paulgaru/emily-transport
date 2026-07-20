@@ -24,7 +24,7 @@
         const SUPABASE_URL = 'https://sgmpqxehmxnryiylcxtv.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnbXBxeGVobXhucnlpeWxjeHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NjkyMTgsImV4cCI6MjEwMDE0NTIxOH0.-gnFYAENE3i1-KDoKj7TPMOSF6D8zioaw-0HELl_DKg';
 
-    // Changed 'supabase' to 'supabaseClient' to avoid the naming collision
+// Changed 'supabase' to 'supabaseClient' to avoid the naming collision
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function fetchSchedule() {
@@ -114,6 +114,7 @@
 
     // Load the schedule when the page opens
     fetchSchedule();
-</script>        
+</script>
+        
 </body>
 </html>
